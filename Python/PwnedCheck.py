@@ -21,6 +21,7 @@ outputname=""
 verbose=False
 serv=""
 base=""
+
 def checkregex(regex, string):
     m=regex.search(str(string))
     return m
@@ -79,40 +80,57 @@ while '.' in serv:
     base=base+ldapbaseformat.format(servportion)+','
 base=base+ldapbaseformat.format(serv)
 
-
-
 while (loop=='y') or (loop=='Y'):
     if not file or secondrun==True:
-        file=input("Enter Name of CSV: ")
+        while True:
+            file=input("Enter Name of CSV: ")
+            test
+            try:
+                test = open(file)
+            except:
+                print("Cannot find",file)
+                continue
+            else:
+                test.close()
+                break
     if not breachregexstring or secondrun==True:
-        breachregexstring=str(input("Enter Breach Regex Expression: "))
-        breachregex=re.compile(breachregexstring)
+        while True:
+            breachregexstring=str(input("Enter Breach Regex Expression: "))
+            try:
+                breachregex=re.compile(breachregexstring)
+            except:
+                print("Invalid Regular Expression")
+                continue
+            break
     if not outputname or secondrun==True:
         outputname=input("Enter the Name of the Breach being checked: ")
     #Opens a CSV to read from, and creates/wipes the contents of an output file
     with open(file, newline='') as inputfile, open(outputname+"EnabledADAccounts.csv", "w", newline='')as outputfile:
         pwnreader=csv.reader(inputfile, delimiter=',', dialect='excel', quotechar='"')
-        pwnwriter=csv.writer(outputfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)#No delimiter or quote as only the username gets put out
+        pwnwriter=csv.writer(outputfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         for row in pwnreader:
-            email=row[0]
-            usernameend=email.find('@')
-            username=email[0:usernameend]
+            username=row[0]
+            usernameend=username.find('@')
+            username=username[0:usernameend]
             if verbose:
                 print(username)
             breach=row[1]
             if checkregex(breachregex, str(breach)):
                 accountsearchfilter='(&(objectclass=person)(sAMAccountName={}))'
-                con.search(base, accountsearchfilter.format(username), attributes=['userAccountControl'])
+                con.search(base, accountsearchfilter.format(username), attributes=['userAccountControl', 'mail'])
                 try:
                     entry = con.entries[0]
                     uac = entry["userAccountControl"]
+                    email = entry["mail"]
                     if verbose:
                         print(uac)
                     if uac != 514:
-                        pwnwriter.writerow([username])
+                        pwnwriter.writerow([username, email, outputname])
                         if verbose:
                             print("hit; username:", username, "was a victim of the", outputname, "breach")       
                 except:
+                    if verbose:
+                        print("Negaitve Info for", username)
                     continue
     while (loop!='y') or (loop!='Y') or (loop!='n') or (loop!='N'):
         loop=input("Run Script Again? (y/n) ")
