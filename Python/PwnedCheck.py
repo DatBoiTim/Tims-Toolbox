@@ -48,7 +48,7 @@ except:
     print("Some args were not provided, please provide information when asked")
 
 #Pre-File Setup
-authed = False
+authed=False
 while not authed:
     if not serv:
         serv=input("Enter Directory Server: ")
@@ -62,7 +62,7 @@ while not authed:
         con.bind()
     except:
         print("Invalid Credentials")
-        redoserv = input("Redo Server(Y/n)? ")
+        redoserv=input("Redo Server(Y/n)? ")
         if redoserv == 'y' or redoserv == 'Y':
             serv=input("Enter Directory Server: ")
         continue # Re-Auth
@@ -86,7 +86,7 @@ while (loop=='y') or (loop=='Y'):
             file=input("Enter Name of CSV: ")
             test
             try:
-                test = open(file)
+                test=open(file)
             except:
                 print("Cannot find",file)
                 continue
@@ -117,15 +117,16 @@ while (loop=='y') or (loop=='Y'):
             breach=row[1]
             if checkregex(breachregex, str(breach)):
                 accountsearchfilter='(&(objectclass=person)(sAMAccountName={}))'
-                con.search(base, accountsearchfilter.format(username), attributes=['userAccountControl', 'mail'])
+                con.search(base, accountsearchfilter.format(username), attributes=['userAccountControl', 'mail', 'givenName'])
                 try:
-                    entry = con.entries[0]
-                    uac = entry["userAccountControl"]
-                    email = entry["mail"]
+                    entry=con.entries[0]
+                    uac=entry["userAccountControl"]
+                    email=entry["mail"]
+                    given=entry["givenName"]
                     if verbose:
                         print(uac)
                     if uac != 514:
-                        pwnwriter.writerow([username, email, outputname])
+                        pwnwriter.writerow([username, given, email, outputname])
                         if verbose:
                             print("hit; username:", username, "was a victim of the", outputname, "breach")       
                 except:
