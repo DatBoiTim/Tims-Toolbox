@@ -1,6 +1,6 @@
 # Requires win32com python library
 # Take CSVs and automates sending breach notifications, best used in conjunction with HIBP
-# CSV formatting should be: ..., given name, email, breach name, breach time\n
+# CSV formatting should be: ..., given name, email, breach name, ...\n
 # I personally use this in conjunction with PwnedCheck to process notifications of emails on my orgs domain being involved in a breach via HIBP
 # This is not personally required, but yields decent results
 import re # Regular Expression for Email Address Finding
@@ -48,7 +48,6 @@ with open(file) as inputfile:
         email=relevantinfoindex[1]
         givenname=row[relevantinfoindex[0]-1]
         breach=row[relevantinfoindex[0]+1]
-        breachwhen=row[relevantinfoindex[0]+2]
         #Email Construction
         breachnotif=outlook.CreateItem(mailitem)
         breachnotif.Subject=emailSubject.format(breach)
