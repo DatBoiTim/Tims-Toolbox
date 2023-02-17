@@ -22,6 +22,27 @@ def findemailinrow(iterant):
             returntuple=(i, iterant[i])
             return returntuple
 
+mailsubject = ""
+mailbody = ""
+
+def modifymail(mailobj, subject, emailaddr, name, body):
+    print("""What do you want to fix?\n
+    1. Email Address
+    2. Subject
+    3. Body
+    (Type quit to Return to Display)
+    """)
+    emailmodin = input("Option: ")
+    if emailmodin.lower() == "email address"| 1:
+        mailobj.To=input("Enter email address: ")
+    elif emailmodin.lower() == "subject" | 2:
+        mailsubject=input("Manually Enter the Email Subject Line:\n")
+    elif emailmodin.lower == "body" | 3:
+        mailbody=input("Manually Enter the Email Body:\n")
+
+    elif emailmodin.lower() == 'quit':
+        return
+
 try:
     outlook=win32com.client.Dispatch('Outlook.Application')
     mailitem=0x0
@@ -38,9 +59,22 @@ while True:
         continue
     break
 
-emailSubject="IT Alert: Your Company Email Address was involved in {0}'s databreach"
+company=input("Enter Company Name for Email Sign Off: ")
+
+mailsubject="IT Alert: Your Company Email Address was involved in {0}'s databreach"
+mailbody="""Hello {0},\n\n
+As a courtesy, we are alerting you that an account associated with your company email has been found in {1}'s databreach. To ensure you\
+maintain control of your {1} account, please reset the password immediately using {1}'s password reset tool.\n\n
+If you had used the password for your {1} account for any of your company accounts, please change your password immediately.\
+ For assistance with resetting your password please contact the helpdesk.
+
+Regards,
+The {2} Information Security Team
+"""
 
 with open(file) as inputfile:
+    initialpreview=True
+    manset=False
     reader=csv.reader(inputfile, delimiter=',', dialect='excel', quotechar='"')
     for row in reader:
         #Vars
@@ -50,4 +84,25 @@ with open(file) as inputfile:
         breach=row[relevantinfoindex[0]+1]
         #Email Construction
         breachnotif=outlook.CreateItem(mailitem)
-        breachnotif.Subject=emailSubject.format(breach)
+        breachnotif.To=email
+        if not manset:
+            breachnotif.Subject=mailsubject.format(breach)
+            breachnotif.Body=mailbody.format(givenname, breach, company)
+        else:
+            breachnotif.Subject=mailsubject
+            breachnotif.Body=mailbody
+        if initialpreview:
+            while True:
+                breachnotif.Display()
+                sendcheck=input("Send Emails?(Y/n) ")
+                if sendcheck.lower() == 'y':
+                    initialpreview=False
+                    break
+                elif sendcheck.lower() == 'n':
+                    modifymail(breachnotif, breachnotif.Subject, breachnotif.To, givenname, breachnotif.Body)
+                    manset=True
+                else:
+                    print("Invalid input")
+        breachnotif.Send()
+
+inputfile.close()
