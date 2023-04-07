@@ -124,7 +124,7 @@ while (loop=='y') or (loop=='Y'):
                     email = entry["mail"]
                     if verbose:
                         print(uac)
-                    if uac != 514:
+                    if uac != "514":
                         pwnwriter.writerow([username, email, outputname])
                         if verbose:
                             print("hit; username:", username, "was a victim of the", outputname, "breach")       
