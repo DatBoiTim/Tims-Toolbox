@@ -44,7 +44,6 @@ def serverconfig(serv,user,pswd,verbose,socket,addr):
 
     global base
     base=""
-    global ldapserverobject
     while '.' in serv:
         dotindex=serv.find('.')
         servportion=serv[0:dotindex]
