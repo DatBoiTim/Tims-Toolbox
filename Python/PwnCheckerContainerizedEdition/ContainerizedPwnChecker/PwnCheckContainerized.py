@@ -10,14 +10,14 @@ import re # Regex Library to process .csv data
 import ssl # Secure Connection
 from ldap3 import Server, Connection, ALL, NTLM, ALL_ATTRIBUTES, ALL_OPERATIONAL_ATTRIBUTES # LDAP Connection Stuff
 from ldap3 import Tls # LDAP Secure Connection
-from socket import * # Communicate Over UDP
+import socket # Communicate Over UDP
 
-initializing=False
 reauth=False
 changebase=False
 requestcheck=False
 shutdown=False
 
+code = ""
 file=""
 breachregexstring=""
 outputname=""
@@ -40,7 +40,7 @@ def servervarset(server,username,pw):
     user=username
     pswd=pw
 
-def serverconfig():
+def serverconfig(verbose):
     ldapserver=Server(serv, use_ssl=True, get_info=all)
     try:
         con=Connection(ldapserver, user, pswd, authentication=NTLM, auto_bind=True) # Accesses Server as a known Active Directory User, In case that's a requirement to view UAC Flags in Your environment
@@ -62,7 +62,7 @@ def serverconfig():
     searchbase=base+ldapbaseformat.format(serv)
     return searchbase
 
-def processcheck():
+def processcheck(verbose):
     try:
         test=open(file)
     except:
@@ -107,50 +107,80 @@ def processcheck():
     outputfile.close()
 
 
-#Parses a Message from the Socket, as a Tuple
+#Parses a Message from the Socket, as a String Delineated by
 #Message = {Code,Args}
 #Code determines action to take:
 # -101 Reauth | Takes Args: Server,Username,Password,Verbose
 # -102 RequestCheck | Takes Args: File,BreachRegexString,OutputName,Verbose
 # -103 Shutdown | Takes Args: NaN
-def parsemessage(message=()):
-    code,arg0,arg1,arg2,arg3 = message
+def parsemessage(message):
+    i=0
+    message=message[2:len(message)-1]
+    print(message)
+    while " " in message:
+        sep=message.find(" ")
+        data=message[0:sep]
+        match i:
+            case 0:
+                code=data
+            case 1:
+                arg0=data
+            case 2:
+                arg1=data
+            case 3:
+                arg2=data
+            case 4:
+                arg3=data
+            case _:
+                return False
+        message=message[sep+1:len(message)]
+        i+=1
     match code:
-        case 101:
+        case "101":
             serv=arg0
             user=arg1
             pswd=arg2
-            verbose=arg3
+            try:
+                if arg3:
+                    verbose=True
+            except:
+                verbose=False
             reauth=True
-        case 102:
+        case "102":
             file=arg0
             breachregexstring=arg1
             outputname=arg2
-            verbose=arg3
+            try:
+                if arg3:
+                    verbose=True
+            except:
+                verbose=False
             requestcheck=True
-        case 103:
+        case "103":
             shutdown=True
+            print("Shutting Down...")
+            return code
         case _:
             print("Error Parsing Message")
 
-def main():
-    #Server Setup
-    ssock = socket(AF_INET, SOCK_DGRAM)
-    ssock.bind("", 12000)
-
-    while True:
-        sockmessage,senderaddress = ssock.recvfrom(1024)
-        parsemessage(sockmessage)
-            
-        if reauth or initializing:
-            ldapserverobject=serverconfig()
+#Server Setup
+with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as ssock:
+    ssock.bind(('127.0.0.1', 6450))
+    while not code == "103":
+        sockmessage, addr = ssock.recvfrom(1024)
+        code=parsemessage(str(sockmessage))
+        if reauth:
+            ldapserverobject=serverconfig(verbose)
             reauth=False
-
-    #Pwned Requests
-        if requestcheck:
-            processcheck()
+            continue
+        elif requestcheck:
+            processcheck(verbose)
             requestcheck=False
-        if shutdown:
-            break
+            continue
+        else:
+            continue
+try:
     ldapserverobject.unbind()
-    ssock.close()
+except:
+    print("No LDAP Server was configured")
+ssock.close()
