@@ -134,9 +134,11 @@ def parsemessage(message=()):
             print("Error Parsing Message")
 
 def main():
+    #Server Setup
+    ssock = socket(AF_INET, SOCK_DGRAM)
+    ssock.bind("", 12000)
+
     while True:
-        #Server Setup
-        ssock = socket(AF_INET, SOCK_DGRAM)
         sockmessage,senderaddress = ssock.recvfrom(1024)
         parsemessage(sockmessage)
             
