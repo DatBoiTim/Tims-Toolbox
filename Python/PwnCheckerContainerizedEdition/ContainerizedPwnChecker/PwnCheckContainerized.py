@@ -34,13 +34,13 @@ def serverconfig(serv,user,pswd,verbose,socket,addr):
         con.open()
         con.bind()
     except:
-        socket.sendto("Invalid Credentials",addr)
+        socket.sendto(str.encode("Invalid Credentials"),addr)
     else:
         global ldapserverobject
         ldapserverobject=con
     if verbose:
-        socket.sendto(con,addr)
-        socket.sendto(con.extend.standard.who_am_i(), addr)
+        socket.sendto(str.encode(con),addr)
+        socket.sendto(str.encode(con.extend.standard.who_am_i()), addr)
 
     global base
     base=""
@@ -50,21 +50,21 @@ def serverconfig(serv,user,pswd,verbose,socket,addr):
         serv=serv[dotindex+1:len(serv)]
         base=base+ldapbaseformat.format(servportion)+','
     base=base+ldapbaseformat.format(serv)
-    socket.sendto("Process Completed", addr)
+    socket.sendto(str.encode("Process Completed"), addr)
 
 def processcheck(file,breachregexstring,outputname,verbose,socket,addr):
     try:
         test=open(file)
     except:
-        socket.sendto("Cannot find "+file, addr)
+        socket.sendto(str.encode("Cannot find "+file), addr)
     else:
         test.close()
     try:
         breachregex=re.compile(breachregexstring)
     except:
-        socket.sendto("Invalid Regular Expression", addr)
+        socket.sendto(str.encode("Invalid Regular Expression"), addr)
     if not outputname:
-            socket.sendto("Error, no output", addr)
+            socket.sendto(str.encode("Error, no output"), addr)
     #Opens a CSV to read from, and creates/wipes the contents of an output file
     with open(file, newline='') as inputfile, open(outputname+"EnabledADAccounts.csv", "w", newline='')as outputfile:
         pwnreader=csv.reader(inputfile, delimiter=',', dialect='excel', quotechar='"')
@@ -74,7 +74,7 @@ def processcheck(file,breachregexstring,outputname,verbose,socket,addr):
             usernameend=username.find('@')
             username=username[0:usernameend]
             if verbose:
-                socket.sendto(username,addr)
+                socket.sendto(str.encode(username),addr)
             breach=row[1]
             if checkregex(breachregex, str(breach)):
                 accountsearchfilter='(&(objectclass=person)(sAMAccountName={}))'
@@ -84,16 +84,16 @@ def processcheck(file,breachregexstring,outputname,verbose,socket,addr):
                     uac=entry["userAccountControl"]
                     email=entry["mail"]
                     if verbose:
-                        socket.sendto(uac,addr)
+                        socket.sendto(str.encode(uac),addr)
                     if uac != "514": #Flags to Check Against are typed as a string because entry["userAccountControl"] returns a string.
                         pwnwriter.writerow([username, email, outputname]) 
                 except:
                     if verbose:
-                        socket.sendto("Negaitve Info for "+username, addr)
+                        socket.sendto(str.encode("Negaitve Info for "+username), addr)
                     continue
     inputfile.close()
     outputfile.close()
-    socket.sendto("Process Completed")
+    socket.sendto(str.encode("Process Completed"), addr)
 
 
 #Parses a Message from the Socket, as a String Delineated by
