@@ -12,21 +12,8 @@ from ldap3 import Server, Connection, ALL, NTLM, ALL_ATTRIBUTES, ALL_OPERATIONAL
 from ldap3 import Tls # LDAP Secure Connection
 import socket # Communicate Over UDP
 
-reauth=False
-changebase=False
-requestcheck=False
-shutdown=False
-
-code = ""
-file=""
-breachregexstring=""
-outputname=""
-serv=""
-user=""
-pswd=""
 ldapbaseformat="DC={0}"
 base=""
-verbose=False
 
 ldapserverobject=""
 searchbase=""
@@ -40,41 +27,45 @@ def servervarset(server,username,pw):
     user=username
     pswd=pw
 
-def serverconfig(verbose):
+def serverconfig(serv,user,pswd,verbose,socket,addr):
     ldapserver=Server(serv, use_ssl=True, get_info=all)
     try:
         con=Connection(ldapserver, user, pswd, authentication=NTLM, auto_bind=True) # Accesses Server as a known Active Directory User, In case that's a requirement to view UAC Flags in Your environment
         con.open()
         con.bind()
     except:
-        print("Invalid Credentials")
+        socket.sendto("Invalid Credentials",addr)
     else:
-        return con
+        global ldapserverobject
+        ldapserverobject=con
     if verbose:
-        print(con)
-        print(con.extend.standard.who_am_i())
+        socket.sendto(con,addr)
+        socket.sendto(con.extend.standard.who_am_i(), addr)
 
+    global base
+    base=""
+    global ldapserverobject
     while '.' in serv:
         dotindex=serv.find('.')
         servportion=serv[0:dotindex]
         serv=serv[dotindex+1:len(serv)]
-        searchbase=base+ldapbaseformat.format(servportion)+','
-    searchbase=base+ldapbaseformat.format(serv)
-    return searchbase
+        base=base+ldapbaseformat.format(servportion)+','
+    base=base+ldapbaseformat.format(serv)
+    socket.sendto("Process Completed", addr)
 
-def processcheck(verbose):
+def processcheck(file,breachregexstring,outputname,verbose,socket,addr):
     try:
         test=open(file)
     except:
-        print("Cannot find",file)
+        socket.sendto("Cannot find "+file, addr)
     else:
         test.close()
     try:
         breachregex=re.compile(breachregexstring)
     except:
-        print("Invalid Regular Expression")
+        socket.sendto("Invalid Regular Expression", addr)
     if not outputname:
-            print("Error, no output")
+            socket.sendto("Error, no output", addr)
     #Opens a CSV to read from, and creates/wipes the contents of an output file
     with open(file, newline='') as inputfile, open(outputname+"EnabledADAccounts.csv", "w", newline='')as outputfile:
         pwnreader=csv.reader(inputfile, delimiter=',', dialect='excel', quotechar='"')
@@ -84,7 +75,7 @@ def processcheck(verbose):
             usernameend=username.find('@')
             username=username[0:usernameend]
             if verbose:
-                print(username)
+                socket.sendto(username,addr)
             breach=row[1]
             if checkregex(breachregex, str(breach)):
                 accountsearchfilter='(&(objectclass=person)(sAMAccountName={}))'
@@ -94,17 +85,16 @@ def processcheck(verbose):
                     uac=entry["userAccountControl"]
                     email=entry["mail"]
                     if verbose:
-                        print(uac)
+                        socket.sendto(uac,addr)
                     if uac != "514": #Flags to Check Against are typed as a string because entry["userAccountControl"] returns a string.
-                        pwnwriter.writerow([username, email, outputname])
-                        if verbose:
-                            print("hit; username:", username, "was a victim of the", outputname, "breach")       
+                        pwnwriter.writerow([username, email, outputname]) 
                 except:
                     if verbose:
-                        print("Negaitve Info for", username)
+                        socket.sendto("Negaitve Info for "+username, addr)
                     continue
     inputfile.close()
     outputfile.close()
+    socket.sendto("Process Completed")
 
 
 #Parses a Message from the Socket, as a String Delineated by
@@ -113,10 +103,9 @@ def processcheck(verbose):
 # -101 Reauth | Takes Args: Server,Username,Password,Verbose
 # -102 RequestCheck | Takes Args: File,BreachRegexString,OutputName,Verbose
 # -103 Shutdown | Takes Args: NaN
-def parsemessage(message):
+def parsemessage(message, socket, addr, server):
     i=0
     message=message[2:len(message)-1]
-    print(message)
     while " " in message:
         sep=message.find(" ")
         data=message[0:sep]
@@ -145,7 +134,7 @@ def parsemessage(message):
                     verbose=True
             except:
                 verbose=False
-            reauth=True
+            serverconfig(serv,user,pswd,verbose,socket,addr)
         case "102":
             file=arg0
             breachregexstring=arg1
@@ -155,32 +144,22 @@ def parsemessage(message):
                     verbose=True
             except:
                 verbose=False
-            requestcheck=True
+            processcheck(file,breachregexstring,outputname,verbose,socket,addr)
         case "103":
             shutdown=True
-            print("Shutting Down...")
-            return code
+            try:
+                server.unbind()
+            except:
+                print("No LDAP Server was configured")
+            socket.sendto("Shutting Down...", addr)
+            socket.close()
+            exit()
         case _:
             print("Error Parsing Message")
 
 #Server Setup
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as ssock:
     ssock.bind(('127.0.0.1', 6450))
-    while not code == "103":
+    while True:
         sockmessage, addr = ssock.recvfrom(1024)
-        code=parsemessage(str(sockmessage))
-        if reauth:
-            ldapserverobject=serverconfig(verbose)
-            reauth=False
-            continue
-        elif requestcheck:
-            processcheck(verbose)
-            requestcheck=False
-            continue
-        else:
-            continue
-try:
-    ldapserverobject.unbind()
-except:
-    print("No LDAP Server was configured")
-ssock.close()
+        parsemessage(str(sockmessage), ssock, addr, ldapserverobject)
