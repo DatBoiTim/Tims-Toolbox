@@ -1,0 +1,3 @@
+This is the folder where all docker images that use bind mounts should mount to after cloning this repo.
+
+Provides easy access to datasets for testing, when I add them!
