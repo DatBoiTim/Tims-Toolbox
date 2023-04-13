@@ -36,7 +36,7 @@ match code:
                     in3=True
                 break
     case '103':
-        print("Shutdown Initiated...")
+        print("No additional Arguments Needed")
     case _:
         print("Invalid Code")
         exit()
@@ -49,8 +49,10 @@ csock.sendto(str.encode(message), (ip, 6450))
 
 while True:
     try:
-        data, server = csock.recvfrom(1024)
-        print(data,server)
+        data, server = csock.recvfrom(2048)
+        data=str(data)
+        data=data[2:len(data)-1]
+        print(data)
         if data == "Process Completed":
             break  
     except TimeoutError:

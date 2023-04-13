@@ -149,16 +149,16 @@ def parsemessage(message, socket, addr, server):
             try:
                 server.unbind()
             except:
-                print("No LDAP Server was configured")
-            socket.sendto("Shutting Down...", addr)
+                socket.sendto(str.encode("No LDAP Server was configured"), addr)
+            socket.sendto(str.encode("Shutting Down..."), addr)
             socket.close()
             exit()
         case _:
-            print("Error Parsing Message")
+            socket.sendto(str.encode("Error Parsing Message"), addr)
 
 #Server Setup
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as ssock:
-    ssock.bind(('127.0.0.1', 6450))
+    ssock.bind(('', 6450))
     while True:
         sockmessage, addr = ssock.recvfrom(1024)
         parsemessage(str(sockmessage), ssock, addr, ldapserverobject)
