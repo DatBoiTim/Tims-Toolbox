@@ -134,13 +134,13 @@ def parsemessage(message, socket, addr, server):
                     n=str(pubkey.n)
                     e=str(pubkey.e)
                     keymessage=e+" "+n
-                    socket.sendto(str.encode(keymessage),addr)
-                    message,addr3=socket.recvfrom(1024)
-                    message=rsa.decrypt(message,privkey)
-                    message=message.decode('utf-8')
-                    while " " in message:
-                        sep=message.find(" ")
-                        data=message[0:sep]
+                    socket.sendto(keymessage.encode('utf-8'),addr)
+                    message2,addr3=socket.recvfrom(1024)
+                    decrypto=rsa.decrypt(message2,privkey)
+                    info=decrypto.decode('utf-8')
+                    while " " in info:
+                        sep=info.find(" ")
+                        data=info[0:sep]
                         match i:
                             case 1:
                                 arg0=data
@@ -150,7 +150,7 @@ def parsemessage(message, socket, addr, server):
                                 arg2=data
                             case _:
                                 return False
-                        message=message[sep+1:len(message)]
+                        info=info[sep+1:len(info)]
                         i+=1
                 else:
                     print("Invalid Response")

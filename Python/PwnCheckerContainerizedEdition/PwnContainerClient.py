@@ -3,7 +3,7 @@ from getpass import getpass
 import rsa
 
 csock=socket(AF_INET, SOCK_DGRAM)
-csock.settimeout(1)
+csock.settimeout(5)
 
 print("Documentation is as follows:")
 print("Code 101 Reconfigures What Directory Server to Authenticate and Query.")
@@ -44,7 +44,7 @@ match code:
 ip=input("Enter IP Address of Container: ")
 message=""
 if code == "101":
-    message=message+code
+    message=message+code+" "
     csock.sendto(str.encode(message), (ip, 6450))
     while True:
         try:
@@ -53,35 +53,18 @@ if code == "101":
             print(data)
             if data == "101":
                 csock.sendto(str.encode("Pubkey"), (ip, 6450))
-                pubkey, addr=csock.recvfrom(2048)
+                pubkey, addr=csock.recvfrom(2048)#Big Numbers mean many bytes
                 pubkey=pubkey.decode('utf-8')
-                i=0
-                while " " in pubkey:
-                    sep=pubkey.find(" ")
-                    data=pubkey[0:sep]
-                    match i:
-                        case 0:
-                            try:
-                                e=int(data)
-                            except:
-                                break
-                        case 1:
-                            try:
-                                n=int(data)
-                            except:
-                                break
-                        case _:
-                            break
-                    message=message[sep+1:len(message)]
-                    i+=1
+                sep=pubkey.find(" ")
+                e=int(pubkey[0:sep])
+                n=int(pubkey[sep:])
                 realkey = rsa.PublicKey(n, e)
-                message=""
-                message=message+in0+" "+in1+" "+in2+" "+in3+" "
-                message=str.encode(message)
-                crypto=rsa.encrypt(message,realkey)
+                message2=""
+                message2=message2+in0+" "+in1+" "+in2+" "+in3+" "
+                messagebyte=message2.encode('utf-8')
+                crypto=rsa.encrypt(messagebyte,realkey)
                 csock.sendto(crypto, (ip, 6450))
                 data,server=csock.recvfrom(2048)
-                data, server = csock.recvfrom(2048)
                 data=data.decode('utf-8')
                 print(data)
                 if data == "Process Completed":
@@ -90,6 +73,8 @@ if code == "101":
                 break 
         except TimeoutError:
             print("Request Timed Out")
+            break
+        else:
             break
 else:
     message=message+code+" "+in0+" "+in1+" "+in2+" "+in3+" "
