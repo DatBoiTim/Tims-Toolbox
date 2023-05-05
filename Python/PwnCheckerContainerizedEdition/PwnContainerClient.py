@@ -14,7 +14,7 @@ in0,in1,in2,in3="","","",""
 match code:
     case '101':
         in0=input("Enter the Server(Ex: spam.eggs.com): ")
-        in1=input("Enter the Username to Auth with(Ex:Python/username): ")
+        in1=input("Enter the Username to Auth with(Ex:Python\\username): ")
         in2=getpass()
         while True:
             verbosein=input("Should setup be verbose?(y/N) ")
