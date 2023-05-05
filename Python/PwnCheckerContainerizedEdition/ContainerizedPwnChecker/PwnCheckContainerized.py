@@ -36,8 +36,10 @@ def serverconfig(serv,user,pswd,verbose,socket,addr):
         con=Connection(ldapserver, user, pswd, authentication=NTLM, auto_bind=True) # Accesses Server as a known Active Directory User, In case that's a requirement to view UAC Flags in Your environment
         con.open()
         con.bind()
+        print("Connected")
     except:
-        socket.sendto(str.encode("Invalid Credentials"),addr)
+        socket.sendto(str.encode("Invalid Server"),addr)
+        return
     else:
         global ldapserverobject
         ldapserverobject=con
@@ -45,13 +47,14 @@ def serverconfig(serv,user,pswd,verbose,socket,addr):
         socket.sendto(str.encode(con),addr)
         socket.sendto(str.encode(con.extend.standard.who_am_i()), addr)
 
-    global base
     base=""
+    print("Formatting Base")
     while '.' in serv:
         dotindex=serv.find('.')
         servportion=serv[0:dotindex]
         serv=serv[dotindex+1:len(serv)]
         base=base+ldapbaseformat.format(servportion)+','
+    print("Base Formatted")
     base=base+ldapbaseformat.format(serv)
     socket.sendto(str.encode("Process Completed"), addr)
 
@@ -127,6 +130,7 @@ def parsemessage(message, socket, addr, server):
         i+=1
     match code:
         case "101":
+            print(code)
             socket.sendto(str.encode("101"),addr)
             try:
                 ready,addr2=socket.recvfrom(1024)
@@ -138,16 +142,19 @@ def parsemessage(message, socket, addr, server):
                     message2,addr3=socket.recvfrom(1024)
                     decrypto=rsa.decrypt(message2,privkey)
                     info=decrypto.decode('utf-8')
+                    i=0
                     while " " in info:
                         sep=info.find(" ")
                         data=info[0:sep]
                         match i:
-                            case 1:
+                            case 0:
                                 arg0=data
-                            case 2:
+                            case 1:
                                 arg1=data
-                            case 3:
+                            case 2:
                                 arg2=data
+                            case 3:
+                                arg3=data
                             case _:
                                 return False
                         info=info[sep+1:len(info)]
@@ -158,9 +165,11 @@ def parsemessage(message, socket, addr, server):
             except TimeoutError:
                 print("Request Timed Out")
                 return
+            print("Populating Server Info")
             serv=arg0
             user=arg1
             pswd=arg2
+            verbose=""
             try:
                 if arg3:
                     verbose=True
