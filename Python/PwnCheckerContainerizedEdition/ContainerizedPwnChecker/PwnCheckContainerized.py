@@ -19,7 +19,7 @@ base=""
 ldapserverobject=""
 searchbase=""
 
-pubkey,privkey = rsa.newkeys(512, poolsize=8)
+pubkey,privkey = rsa.newkeys(1024, poolsize=8)
 
 def checkregex(regex, string):
     m=regex.search(str(string))
@@ -38,6 +38,7 @@ def serverconfig(serv,user,pswd,verbose,socket,addr):
         con.bind()
         print("Connected")
     except:
+        print("Invalid Server")
         socket.sendto(str.encode("Invalid Server"),addr)
         return
     else:
