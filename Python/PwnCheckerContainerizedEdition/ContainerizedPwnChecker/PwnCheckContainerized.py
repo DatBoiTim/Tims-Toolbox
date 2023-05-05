@@ -11,12 +11,15 @@ import ssl # Secure Connection
 from ldap3 import Server, Connection, ALL, NTLM, ALL_ATTRIBUTES, ALL_OPERATIONAL_ATTRIBUTES # LDAP Connection Stuff
 from ldap3 import Tls # LDAP Secure Connection
 import socket # Communicate Over UDP
+import rsa # Password Transport
 
 ldapbaseformat="DC={0}"
 base=""
 
 ldapserverobject=""
 searchbase=""
+
+pubkey,privkey = rsa.newkeys(512, poolsize=8)
 
 def checkregex(regex, string):
     m=regex.search(str(string))
@@ -104,7 +107,6 @@ def processcheck(file,breachregexstring,outputname,verbose,socket,addr):
 # -103 Shutdown | Takes Args: NaN
 def parsemessage(message, socket, addr, server):
     i=0
-    message=message[2:len(message)-1]
     while " " in message:
         sep=message.find(" ")
         data=message[0:sep]
@@ -125,6 +127,37 @@ def parsemessage(message, socket, addr, server):
         i+=1
     match code:
         case "101":
+            socket.sendto(str.encode("101"),addr)
+            try:
+                ready,addr2=socket.recvfrom(1024)
+                if ready.decode('utf-8') == "Pubkey" and addr2 == addr:
+                    n=str(pubkey.n)
+                    e=str(pubkey.e)
+                    keymessage=e+" "+n
+                    socket.sendto(str.encode(keymessage),addr)
+                    message,addr3=socket.recvfrom(1024)
+                    message=rsa.decrypt(message,privkey)
+                    message=message.decode('utf-8')
+                    while " " in message:
+                        sep=message.find(" ")
+                        data=message[0:sep]
+                        match i:
+                            case 1:
+                                arg0=data
+                            case 2:
+                                arg1=data
+                            case 3:
+                                arg2=data
+                            case _:
+                                return False
+                        message=message[sep+1:len(message)]
+                        i+=1
+                else:
+                    print("Invalid Response")
+                    return
+            except TimeoutError:
+                print("Request Timed Out")
+                return
             serv=arg0
             user=arg1
             pswd=arg2
@@ -149,16 +182,16 @@ def parsemessage(message, socket, addr, server):
             try:
                 server.unbind()
             except:
-                socket.sendto(str.encode("No LDAP Server was configured"), addr)
-            socket.sendto(str.encode("Shutting Down..."), addr)
-            socket.close()
+                ssock.sendto(str.encode("No LDAP Server was configured"), addr)
+            ssock.sendto(str.encode("Shutting Down..."), addr)
+            ssock.close()
             exit()
         case _:
-            socket.sendto(str.encode("Error Parsing Message"), addr)
+            ssock.sendto(str.encode("Error Parsing Message"), addr)
 
 #Server Setup
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as ssock:
     ssock.bind(('', 6450))
     while True:
         sockmessage, addr = ssock.recvfrom(1024)
-        parsemessage(str(sockmessage), ssock, addr, ldapserverobject)
+        parsemessage(sockmessage.decode('utf-8'), ssock, addr, ldapserverobject)

@@ -1,5 +1,6 @@
 from socket import *
 from getpass import getpass
+import rsa
 
 csock=socket(AF_INET, SOCK_DGRAM)
 csock.settimeout(1)
@@ -40,22 +41,67 @@ match code:
     case _:
         print("Invalid Code")
         exit()
-
-message=""
-message=message+code+" "+in0+" "+in1+" "+in2+" "+in3+" "
-
 ip=input("Enter IP Address of Container: ")
-csock.sendto(str.encode(message), (ip, 6450))
-
-while True:
-    try:
-        data, server = csock.recvfrom(2048)
-        data=str(data)
-        data=data[2:len(data)-1]
-        print(data)
-        if data == "Process Completed":
-            break  
-    except TimeoutError:
-        print("Request Timed Out")
-        break
+message=""
+if code == "101":
+    message=message+code
+    csock.sendto(str.encode(message), (ip, 6450))
+    while True:
+        try:
+            data, server=csock.recvfrom(2048)
+            data=data.decode('utf-8')
+            print(data)
+            if data == "101":
+                csock.sendto(str.encode("Pubkey"), (ip, 6450))
+                pubkey, addr=csock.recvfrom(2048)
+                pubkey=pubkey.decode('utf-8')
+                i=0
+                while " " in pubkey:
+                    sep=pubkey.find(" ")
+                    data=pubkey[0:sep]
+                    match i:
+                        case 0:
+                            try:
+                                e=int(data)
+                            except:
+                                break
+                        case 1:
+                            try:
+                                n=int(data)
+                            except:
+                                break
+                        case _:
+                            break
+                    message=message[sep+1:len(message)]
+                    i+=1
+                realkey = rsa.PublicKey(n, e)
+                message=""
+                message=message+in0+" "+in1+" "+in2+" "+in3+" "
+                message=str.encode(message)
+                crypto=rsa.encrypt(message,realkey)
+                csock.sendto(crypto, (ip, 6450))
+                data,server=csock.recvfrom(2048)
+                data, server = csock.recvfrom(2048)
+                data=data.decode('utf-8')
+                print(data)
+                if data == "Process Completed":
+                    break
+            else:
+                break 
+        except TimeoutError:
+            print("Request Timed Out")
+            break
+else:
+    message=message+code+" "+in0+" "+in1+" "+in2+" "+in3+" "
+    csock.sendto(str.encode(message), (ip, 6450))
+    while True:
+        try:
+            data, server = csock.recvfrom(2048)
+            data=data.decode('utf-8')
+            print(data)
+            if data == "Process Completed":
+                break  
+        except TimeoutError:
+            print("Request Timed Out")
+            break
 
