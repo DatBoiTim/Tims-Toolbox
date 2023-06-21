@@ -1,0 +1,75 @@
+GUI r
+DELAY 250
+STRING notepad
+DELAY 250
+ENTER
+DELAY 1000
+STRING               _.-------.._                    -,
+ENTER
+HOME
+STRING           .-"```"--..,,_/ /`-,               -,  \ 
+ENTER
+HOME
+STRING        .:"          /:/  /'\  \     ,_...,  `. |  |
+ENTER
+HOME
+STRING       /       ,----/:/  /`\ _\~`_-"`     _;
+ENTER
+HOME
+STRING      '      / /`"""'\ \ \.~`_-'      ,-"'/ 
+ENTER
+HOME
+STRING     |      | |  0    | | .-'      ,/`  /
+ENTER
+HOME
+STRING    |    ,..\ \     ,.-"`       ,/`    /
+ENTER
+HOME
+STRING   ;    :    `/`""\`           ,/--==,/-----,
+ENTER
+HOME
+STRING   |    `-...|        -.___-Z:_______J...---;
+ENTER
+HOME
+STRING   :         `                           _-'
+ENTER
+HOME
+STRING  _L_  _     ___  ___  ___  ___  ____--"`
+ENTER
+HOME
+STRING | __|| |   |_ _|| _ \| _ \| __|| _ \ 
+ENTER
+HOME
+STRING | _| | |__  | | |  _/|  _/| _| |   / 
+ENTER
+HOME
+STRING |_|  |____||___||_|  |_|  |___||_|_\ 
+ENTER
+HOME
+ENTER
+STRING Remember not to leave your PC Unlocked and Unattended
+ENTER
+STRING Sensitive Data can be stolen by bad actors that are on site, and nobody wants that!
+ENTER
+STRING This message was placed by the IT Department as part of our Clean Desk Initiative
+
+CTRL s
+DELAY 1250
+BACKSPACE
+STRING CleanDeskPolicy.txt
+
+TAB
+REPEAT 6
+
+ENTER
+BACKSPACE
+STRING Desktop
+ENTER
+
+ENTER
+REPEAT 3
+
+DELAY 500
+ALT f4
+DELAY 500
+GUI l
