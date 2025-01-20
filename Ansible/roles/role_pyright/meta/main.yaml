@@ -1,0 +1,4 @@
+# tims-toolbox/Ansible/roles/role_pyright/meta/main.yaml
+---
+dependencies:
+  - role: role_node

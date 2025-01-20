@@ -1,0 +1,3 @@
+supported_distributions:
+  - Ubuntu
+drop_init: yes

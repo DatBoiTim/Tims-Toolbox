@@ -1,0 +1,9 @@
+---
+- name: Install npm requirements
+  become: true
+  ansible.builtin.apt:
+    name:
+      - nodejs
+      - npm
+    update_cache: yes
+

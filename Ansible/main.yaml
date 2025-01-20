@@ -1,0 +1,23 @@
+---
+- name: DatBoiTim Workstation Setup
+  hosts: localhost
+  tags:
+    - workstation
+
+  tasks:
+    - name: Copy new bashrc
+      ansible.builtin.copy:
+        src: ./files/bashrc.bashrc
+        dest: "{{ ansible_env.HOME }}/.bashrc"
+      notify:
+        - Bashrc changed
+
+    - name: Install neovim with role
+      include_role:
+        name: role_nvim
+
+  handlers:
+    - name: Bashrc changed
+      ansible.builtin.debug:
+        msg: "Bashrc Changed, please log-out and log back in or run `source ~/.bashrc`"
+

@@ -1,0 +1,13 @@
+---
+- name: Noble and later
+  include_tasks: ./ubuntu_24.yaml
+  when: ansible_distribution_major_version => 24
+
+- name: Fail due to old version
+  ansible.builtin.fail:
+    msg: "Currently running {{ ansible_distribution_major_version }} minimum requirement is 18."
+  when: ansible_distribution_major_version < 18
+
+- name: Pre noble install
+  include_tasks: ./ubuntu_lt24.yaml
+  

@@ -1,0 +1,13 @@
+---
+- name: Fail for unsupported distribution
+  ansible.builtin.fail:
+    msg: "{{ ansible_distribution }} is not supported"
+  when: ansible_distribution not in supported_distributions
+
+- name: Ubuntu install tasks
+  include_tasks: ./ubuntu_main.yaml
+  when: ansible_distribution == "Ubuntu"
+
+- name: Drop init.lua
+  include_tasks: ./init_lua.yaml
+  when: drop_init|bool
