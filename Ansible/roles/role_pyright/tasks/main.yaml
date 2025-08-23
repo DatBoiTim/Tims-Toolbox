@@ -1,0 +1,3 @@
+---
+- name: Install pyright
+  ansible.builtin.shell: npm install pyright
