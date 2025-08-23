@@ -1,0 +1,12 @@
+- name: Install Rust
+  become: true
+  ansible.builtin.apt:
+    name: rustup
+
+- name: Setup Rust
+  ansible.builtin.shell: |
+    rustup default stable
+
+- name: Install rust analyzer
+  ansible.builtin.shell: |
+    rustup component add rust-analyzer

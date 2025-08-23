@@ -16,6 +16,10 @@
       include_role:
         name: role_nvim
 
+    - name: Install rust with role
+      include_role:
+        name: role_rustup
+
     - name: Setup git config to use editor nvim
       ansible.builtin.shell: |
         git config --global core.editor "nvim"
