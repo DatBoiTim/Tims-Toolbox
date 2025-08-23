@@ -1,0 +1,6 @@
+- name: Install Dependencies
+  become: true
+  ansible.builtin.apt:
+    name: 
+      - neovim
+      - curl

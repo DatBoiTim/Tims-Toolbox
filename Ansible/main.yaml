@@ -16,6 +16,10 @@
       include_role:
         name: role_nvim
 
+    - name: Setup git config to use editor nvim
+      ansible.builtin.shell: |
+        git config --global core.editor "nvim"
+
   handlers:
     - name: Bashrc changed
       ansible.builtin.debug:

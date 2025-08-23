@@ -1,3 +1,4 @@
 supported_distributions:
   - Ubuntu
+  - Debian
 drop_init: yes

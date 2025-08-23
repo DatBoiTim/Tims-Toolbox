@@ -6,7 +6,11 @@
 
 - name: Ubuntu install tasks
   include_tasks: ./ubuntu_main.yaml
-  when: ansible_distribution == "Ubuntu"
+  when: ansible_distribution == "Ubuntu" 
+
+- name: Debian install tasks
+  include_tasks: ./debian_main.yaml
+  when: ansible_distribution == "Debian" 
 
 - name: Drop init.lua
   include_tasks: ./init_lua.yaml
