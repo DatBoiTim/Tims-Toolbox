@@ -24,6 +24,15 @@
       ansible.builtin.shell: |
         git config --global core.editor "nvim"
 
+    - name: Cleanup js bloat from install
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop: 
+        - package.json
+        - package-lock.json
+        - node_modules
+
   handlers:
     - name: Bashrc changed
       ansible.builtin.debug:
